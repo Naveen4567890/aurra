@@ -4,11 +4,11 @@ import Register from '../components/Register'
 import Login from '../components/Login'
 let routes=createBrowserRouter([
     {
-        path:"/register",
+        path:"/",
         element:<Register></Register>
     },
     {
-        path:"/",
+        path:"/login",
         element:<Login></Login>
     },
     
