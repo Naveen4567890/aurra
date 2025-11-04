@@ -1,12 +1,15 @@
-import React, { useState } from "react";
+import React, { use, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { registerUser } from "../slice/slice"; 
 import toast from 'react-hot-toast';
-
+import {validatePassword} from 'val-pass';
+import { Link, useNavigate } from "react-router-dom";
 
 const RegisterPage = () => {
+  let nagivate=useNavigate();
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.user);
+  const [errorMessage,setErrorMessage]=useState("");
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -23,18 +26,31 @@ const RegisterPage = () => {
     if (name === "image" && files.length > 0) {
       setFormData({ ...formData, image: files[0] });
       setPreview(URL.createObjectURL(files[0]));
-    } else {
-      setFormData({ ...formData, [name]: value });
+    } 
+    else if(name=='password'){
+        let{validateAll,getAllValidationErrorMessage}=validatePassword(value,8)
+        validateAll()?setErrorMessage(""):setErrorMessage(getAllValidationErrorMessage)
+        value==""&&setErrorMessage("")
     }
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    let { fullName, email, password, confirmPassword } = formData;
+    if (!fullName || !email || !password || !confirmPassword) {
+      toast.error("All fields are mandatory");
+      return;
+    }
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
+      toast.error("Passwords do not match");
       return;
     }
     dispatch(registerUser(formData));
+    toast.success("Registration successful! Please log in.");
+    console.log(formData);
+    
+    nagivate("/login");
   };
 
   return (
@@ -67,9 +83,9 @@ const RegisterPage = () => {
           </h2>
           <p className="text-center text-sm text-gray-500 mb-6">
             Already have an account?{" "}
-            <a href="#" className="text-indigo-600 hover:underline">
+            <Link to="/login" className="text-indigo-600 hover:underline">
               Sign in
-            </a>
+            </Link>
           </p>
 
           
@@ -98,6 +114,7 @@ const RegisterPage = () => {
                 </svg>
               )}
             </div>
+            
           </div>
 
           <div className="text-center mb-4">
@@ -143,7 +160,9 @@ const RegisterPage = () => {
               required
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
             />
-
+                
+                <div className={`flex w-full h-2/3 rounded-lg ${!errorMessage?'hidden':''} `}><span className='border-red-700'>*{errorMessage}</span></div>
+                
             <input
               type="password"
               name="confirmPassword"
@@ -154,7 +173,8 @@ const RegisterPage = () => {
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
             />
           </div>
-          
+
+            
 
           <div className="flex items-center mt-4">
             <input type="checkbox" required className="mr-2 accent-indigo-500" />
